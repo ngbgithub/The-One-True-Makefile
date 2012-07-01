@@ -10,3 +10,22 @@
 *.lai
 *.la
 *.a
+
+# Build artifacts
+Makefile
+config.status
+include/stamp-h
+include/stamp-h.in
+autom4te.cache
+*.d
+
+# "Junk"
+*.log
+*~
+#*
+
+# Directories with build targets in them.
+*-build
+*-stage
+*-test
+

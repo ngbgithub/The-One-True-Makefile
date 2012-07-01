@@ -20,7 +20,7 @@ MyProject::Foo::Foodle class, then you should specify its interface
 with an include directive that mirrors the namespace hierarchy, like
 so:
 
-#include "MyProject/Foo/Foodle.h"
+ #include "MyProject/Foo/Foodle.h"
 
 Thus, if the interface file is going to end up installed in a normal
 way, at /usr/local/include/MyProject/Foo/Foodle.h", then the people
@@ -34,7 +34,7 @@ Please note that some people use a dirty scheme whereby their include
 directive for a file installed somewhere like
 /usr/local/include/MyProject/Foo/Foodle.h looks like this:
 
-#include "Foo/Foodle.h" // Bad!
+ #include "Foo/Foodle.h" // Bad!
 
 This means that their users have to pass the compiler a
 -I/usr/local/include/MyProject flag, since the compiler doesn't know
@@ -120,16 +120,16 @@ of the box, using the standard autotools commands.  For example, if
 your project uses some libraries that happen to be installed in your
 $HOME/.local directory, you would run:
 
-autoconf
-LDFLAGS=-L$HOME/.local/lib CPPFLAGS=-I$HOME/.local/include ./configure
-make
+ autoconf
+ LDFLAGS=-L$HOME/.local/lib CPPFLAGS=-I$HOME/.local/include ./configure
+ make
 
 After the the build process completes, the targets should be sitting
 in Linux-stage.  (I'm assuming you're running Linux, but if not, the
 slightly different name of the actual staging location should be
 obvious.)  You can verify everything is working by running:
 
-./Linux-stage/bin/hello
+ ./Linux-stage/bin/hello
 
 Note that the hello program successfully finds the libfoo.so shared
 library, thanks to libtool.
@@ -168,7 +168,7 @@ modules := \
       template to make a testbar module, you would change this section
       to:
 
-modules := \
+ modules := \
 	testbar
 
 *) Edit your module.mk files to list all of the files you want to be
@@ -184,7 +184,7 @@ modules := \
    baz/etc/my_project/baz/bazqux.conf, then you want to make sure
    baz/module.mk has this line:
 
-baz_etcs := $(stage_dir)/etc/my_project/baz/bazqux.conf
+ baz_etcs := $(stage_dir)/etc/my_project/baz/bazqux.conf
 
    On the other hand, maybe you want your bazqux.conf file to go in
    the bottom of etc, instead of in a series of subdirectories.  In
@@ -192,7 +192,7 @@ baz_etcs := $(stage_dir)/etc/my_project/baz/bazqux.conf
    baz/etc/bazqux.conf, and line in baz/module.mk would look like
    this:
 
-baz_etcs := $(stage_dir)/etc/bazqux.conf
+ baz_etcs := $(stage_dir)/etc/bazqux.conf
 
    In the first case, running "make install" with the default
    /usr/local value as your prefix would install that config file to
@@ -230,7 +230,7 @@ baz_etcs := $(stage_dir)/etc/bazqux.conf
    tests in the project.m4 file, and add a line like this to your new
    configure.ac:
 
-m4_include([project.m4])
+ m4_include([project.m4])
 
    The provided project.m4 file has a handful of tests you might find
    useful.
@@ -240,8 +240,8 @@ m4_include([project.m4])
    directory, so you will also want to modify the AC_CONFIG_HEADERS
    and AC_CONFIG_SRCDIR lines to this:
 
-AC_CONFIG_SRCDIR([include/config.h.in])
-AC_CONFIG_HEADERS([include/config.h])
+ AC_CONFIG_SRCDIR([include/config.h.in])
+ AC_CONFIG_HEADERS([include/config.h])
 
    If you don't like the include/config.h scheme, it's easy to change;
    you just have to change some lines in Makefile.in, near the
@@ -270,7 +270,7 @@ silently dying by typing "make"; if it just returns, without saying
 "make: Nothing to do for 'all'.", then it is silently dying.  Another
 obvious way is to check the return code by running:
 
-make || echo err
+ make || echo err
 
 If it says "err", something went wrong, even if you don't have an
 error message.
@@ -283,12 +283,12 @@ dependency files (i.e. the *.d files) to be inaccurate.  A way to fix
 this is to delete all the dependency files so that they will be
 regenerated correctly.  One way to do this is to run:
 
-find . -type f -name "*.d" -exec rm -vf {} \;
+ find . -type f -name "*.d" -exec rm -vf {} \;
 
 You may also want to start fresh by deleting all the output of the
 entire build process by running:
 
-rm Linux-* -rf
+ rm Linux-* -rf
 
 (If you're not on Linux, it should be obvious how to change this
 line.)

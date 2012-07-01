@@ -14,8 +14,6 @@
 # Build artifacts
 Makefile
 config.status
-include/stamp-h
-include/stamp-h.in
 autom4te.cache
 *.d
 

@@ -1,0 +1,21 @@
+The One True Makefile project is hereby placed in the public domain
+(with the exception of the tinyxml module), although if you found the
+One True Makefile project useful as a template or example, it would be
+nice if you could mention that fact in your project's README file
+and/or documentation.  (But acknowledgement is not any kind of
+requirement, since this project is in the public domain.)
+
+TinyXML was written by Lee Thomason, and is licensed under the quite
+permissive zlib license.  Please see
+http://www.grinninglizard.com/tinyxmldocs/index.html for details.  (If
+you don't want to include TinyXML in your projects, it's trivial to
+remove from the One True Makefile project.)
+
+If this COPYING file is included with another project besides the One
+True Makefile project, then what probably happened is that the author
+used the One True Makefile project as a template, but forgot to modify
+this COPYING file.  In that case, you should probably assume their
+source code is not in the public domain.
+
+Neil Bushong
+2012-06-30

@@ -1,0 +1,471 @@
+# This Makefile borrows ideas from the one presented in the article
+#   Make Considered Harmfile, by Peter Miller
+
+######################################################################
+# Declare some useful variables.
+######################################################################
+
+# Our dependency rule requires bash, not dash.  (/bin/sh is a link to
+#   /bin/dash on some systems.)
+SHELL = @BASH@
+
+CXX := @CXX@
+CC := @CXX@
+CPPFLAGS = @CPPFLAGS@
+CXXFLAGS = @CXXFLAGS@ -Wall -Werror
+CCFLAGS = @CXXFLAGS@
+LDFLAGS = @LDFLAGS@
+LDLIBS = @LIBS@
+INSTALL := @INSTALL@
+LIBTOOL := @LIBTOOL@
+
+prefix := @prefix@
+exec_prefix := @exec_prefix@
+bindir := $(exec_prefix)/bin
+libdir := $(prefix)/lib
+host := @host@
+#cxx_mm := @cxx_mm@
+cxx_mm := $(CXX) -MM
+cc_mm := $(CC) -MM
+
+# (Needs Python 2.7 or later, or 3.2 or later.)
+PYTHON := @PYTHON@
+
+# Note that autoconf also reads the release file.
+release := $(shell cat release | tr -d '\n')
+
+PKG_NAME := one_true_makefile
+
+# The $(modules) and $(testmodules) variables give all of the modules
+#   (i.e. separate source directories) that make up this project.
+modules := \
+	tinyxml	foo
+
+testmodules := \
+	test_tinyxml	test_foo 
+
+
+# The module.mk files in each module directory will add to these
+#   variables.
+SRC =
+BIN_INSTALL_LIST =
+ETC_INSTALL_LIST =
+INCLUDE_INSTALL_LIST =
+LIB_INSTALL_LIST =
+SHARE_INSTALL_LIST =
+
+# These directories will hold the products of the build process.
+#build_dir := $(host)-build
+#build_dir := $(shell uname)-$(shell uname -m)-build
+#build_dir := build
+build_dir := $(shell uname)-build
+stage_dir := $(shell uname)-stage
+test_dir :=  $(shell uname)-test
+
+# List all the directories the build process may create.
+# Note that the order here is significant, in that we will want to
+#   remove directories depth-first.
+dirs := \
+	$(addprefix $(build_dir)/,$(modules) $(testmodules))		\
+	$(build_dir)							\
+	$(stage_dir)/bin						\
+	$(stage_dir)/lib/$(PKG_NAME)					\
+	$(stage_dir)/lib						\
+	$(addprefix $(stage_dir)/etc/$(PKG_NAME)/,$(modules))		\
+	$(stage_dir)/etc/$(PKG_NAME)					\
+	$(stage_dir)/etc						\
+	$(addprefix $(stage_dir)/include/$(PKG_NAME)/,$(modules))	\
+	$(stage_dir)/include/$(PKG_NAME)				\
+	$(stage_dir)/include						\
+	$(addprefix $(stage_dir)/share/$(PKG_NAME)/,$(modules))		\
+	$(stage_dir)/share/$(PKG_NAME)					\
+	$(stage_dir)/share						\
+	$(stage_dir)							\
+	$(addprefix $(test_dir)/etc/$(PKG_NAME)/,$(testmodules))	\
+	$(test_dir)/etc/$(PKG_NAME)					\
+	$(test_dir)/etc							\
+	$(addprefix $(test_dir)/include/$(PKG_NAME)/,$(testmodules))	\
+	$(test_dir)/include/$(PKG_NAME)					\
+	$(test_dir)/include						\
+	$(addprefix $(test_dir)/share/$(PKG_NAME)/,$(testmodules))	\
+	$(test_dir)/share/$(PKG_NAME)					\
+	$(test_dir)/share						\
+	$(test_dir)/bin							\
+	$(test_dir)							\
+
+# These are "junk" files.  (Emacs leaves foo~ and/or #foo# files, so
+#   we're globbing for *~ or #*.)
+clean_targets := $(shell find . -type f \( -name "*~" -o -name \\\#* \))
+
+######################################################################
+# Include the other pieces of the Makefile.
+######################################################################
+
+# Include the module makefile pieces.
+include $(addsuffix /module.mk,$(modules) $(testmodules))
+
+# Include the dependency files.
+DEP := $(addsuffix .d,$(basename $(SRC)))
+-include $(DEP)
+
+# Include the rules for the documentation.
+#include docs/docs.mk
+
+######################################################################
+# Implicit rules, along with vpath directives explaining where to find
+#   the source files:
+######################################################################
+
+# We create $(stage_dir)/lib here so that the -lblah rules will work.
+vpath %.la $(stage_dir)/lib $(shell mkdir -p $(stage_dir)/lib)
+LDFLAGS += -L$(stage_dir)/lib
+
+define link_exe_rule
+        $(LIBTOOL) --mode=link \
+        $(CC) $(LDFLAGS) -o $@ $^ -rpath $(prefix)/lib $(LDLIBS)
+endef
+
+define link_lib_rule
+	$(link_exe_rule) -release $(release)
+endef
+
+# I'd like to do this ifdef/define logic from within configure.ac, but
+#   the multitude of special characters has defeated me.
+#ifdef cxx_mm
+# This rule generates .d dependency files.
+# define cxx_dep_rule
+# 	$(cxx_mm) $(CPPFLAGS) $< \
+# 	| sed 's,.*\.o[ :]*,$$(build_dir)/$(notdir $(@:.d=.lo)) $@ : ,g' > $@
+# endef
+# define cc_dep_rule
+# 	$(cc_mm) $(CPPFLAGS) $< \
+# 	| sed 's,.*\.o[ :]*,$$(build_dir)/$(notdir $(@:.d=.lo)) $@ : ,g' > $@
+# endef
+# else
+# define cxx_dep_rule
+# 	touch $@
+# endef
+# define cc_dep_rule
+# 	touch $@
+# endef
+# endif
+
+######################################################################
+# Loop through all the module names and define module-specific rules:
+######################################################################
+
+define module_template
+
+# Stuff in etc, share and include can just be copied.
+
+# A file like stage/include/mypackage/foo/foo.hpp comes from
+#   /foo/include/mypackage/foo/foo.hpp, and can just be copied.  The
+#   same goes for stage/include/mypackage/bar.hpp, which comes from
+#   bar/include/mypackage/bar.hpp.
+
+$$(stage_dir)/include/$$(PKG_NAME)/$(1)/%: $(1)/include/$$(PKG_NAME)/$(1)/% \
+	| $$(stage_dir)/include/$$(PKG_NAME)/$(1)
+	cp $$< $$@
+$$(stage_dir)/include/$$(PKG_NAME)/%: $(1)/include/$$(PKG_NAME)/% \
+	| $$(stage_dir)/include/$$(PKG_NAME)
+	cp $$< $$@
+# $$(stage_dir)/include/%: $(1)/include/$$(PKG_NAME)/% \
+# 	| $$(stage_dir)/include/$$(PKG_NAME)
+# 	cp $$< $$@
+$$(test_dir)/include/$$(PKG_NAME)/$(1)/%: $(1)/include/$$(PKG_NAME)/$(1)/% \
+	| $$(test_dir)/include/$$(PKG_NAME)/$(1)
+	cp $$< $$@
+$$(test_dir)/include/$$(PKG_NAME)/%: $(1)/include/$$(PKG_NAME)/% \
+	| $$(test_dir)/include/$$(PKG_NAME)
+	cp $$< $$@
+# $$(test_dir)/include/%: $(1)/include/$$(PKG_NAME)/% \
+# 	| $$(test_dir)/include/$$(PKG_NAME)
+# 	cp $$< $$@
+
+# We have the same situation for share and etc.
+
+$$(stage_dir)/share/$$(PKG_NAME)/$(1)/%: $(1)/share/$$(PKG_NAME)/$(1)/% \
+	| $$(stage_dir)/share/$$(PKG_NAME)/$(1)
+	cp $$< $$@
+$$(stage_dir)/share/$$(PKG_NAME)/%: $(1)/share/$$(PKG_NAME)/% \
+	| $$(stage_dir)/share/$$(PKG_NAME)
+	cp $$< $$@
+# $$(stage_dir)/share/%: $(1)/share/$$(PKG_NAME)/% \
+# 	| $$(stage_dir)/share/$$(PKG_NAME)
+# 	cp $$< $$@
+$$(test_dir)/share/$$(PKG_NAME)/$(1)/%: $(1)/share/$$(PKG_NAME)/$(1)/% \
+	| $$(test_dir)/share/$$(PKG_NAME)/$(1)
+	cp $$< $$@
+$$(test_dir)/share/%: $(1)/share/$$(PKG_NAME)/% \
+	| $$(test_dir)/share/$$(PKG_NAME)
+	cp $$< $$@
+# $$(test_dir)/share/%: $(1)/share/$$(PKG_NAME)/% \
+# 	| $$(test_dir)/share/$$(PKG_NAME)
+# 	cp $$< $$@
+
+$$(stage_dir)/etc/$$(PKG_NAME)/$(1)/%: $(1)/etc/$$(PKG_NAME)/$(1)/% \
+	| $$(stage_dir)/etc/$$(PKG_NAME)/$(1)
+	cp $$< $$@
+$$(stage_dir)/etc/$$(PKG_NAME)/%: $(1)/etc/$$(PKG_NAME)/% \
+	| $$(stage_dir)/etc/$$(PKG_NAME)
+	cp $$< $$@
+# $$(stage_dir)/etc/%: $(1)/etc/$$(PKG_NAME)/% \
+# 	| $$(stage_dir)/etc/$$(PKG_NAME)
+# 	cp $$< $$@
+$$(test_dir)/etc/$$(PKG_NAME)/$(1)/%: $(1)/etc/$$(PKG_NAME)/$(1)/% \
+	| $$(test_dir)/etc/$$(PKG_NAME)/$(1)
+	cp $$< $$@
+$$(test_dir)/etc/$$(PKG_NAME)/%: $(1)/etc/$$(PKG_NAME)/% \
+	| $$(test_dir)/etc/$$(PKG_NAME)
+	cp $$< $$@
+# $$(test_dir)/etc/%: $(1)/etc/$$(PKG_NAME)/% \
+# 	| $$(test_dir)/etc/$$(PKG_NAME)
+# 	cp $$< $$@
+
+# Make files like build/foo/bar.lo from foo/src/bar.cpp.
+
+$$(build_dir)/$(1)/%.lo: $(1)/src/%.cpp | $$(build_dir)/$(1)
+	$(LIBTOOL) --mode=compile \
+	$$(CXX) -c $$(CPPFLAGS) $$(CXXFLAGS) -o $$@ $$<
+
+$$(build_dir)/$(1)/%.lo: $(1)/src/%.c | $$(build_dir)/$(1)
+	$(LIBTOOL) --mode=compile \
+	$$(CC) -c $$(CPPFLAGS) $$(CCFLAGS) -o $$@ $$<
+
+# Make files like build/bin/bar from build/foo/bar.lo.
+
+$$(stage_dir)/bin/%: $$(build_dir)/$(1)/%.lo | $$(stage_dir)/bin
+	$$(call link_exe_rule)
+$$(test_dir)/bin/%: $$(build_dir)/$(1)/%.lo | $$(test_dir)/bin
+	$$(call link_exe_rule)
+
+# This rule generates .d dependency files.  We use the compiler to
+#   generate the .o dependencies, and then use sed to massage the
+#   output to change .o to .lo (for libtool), and to add the .d file
+#   itself as a dependency.  (This is based on an idea described in
+#   the GNU Make manual; it may be instructive to look in that manual
+#   if you'd like more explanation.)
+# We check PIPESTATUS and remove the .d file since, if the compiler
+#   runs into an error and a blank dependency file is generated, we
+#   want to remove the blank dependency file, so that make will
+#   attempt to regenerate it again on the next invocation.
+$(1)/src/%.d: $(1)/src/%.cpp
+	$$(cxx_mm) $$(CPPFLAGS) $$< | \
+	sed 's,.*\.o[ :]*,$$(build_dir)/$(1)/$$(notdir $$(@:.d=.lo)) $$@ : ,g' \
+	> $$@ ; \
+	[ $$$${PIPESTATUS[0]} -eq 0 ] || $$(RM) -v $$@
+
+$(1)/src/%.d: $(1)/src/%.c
+	$$(cc_mm) $$(CPPFLAGS) $$< | \
+	sed 's,.*\.o[ :]*,$$(build_dir)/$(1)/$$(notdir $$(@:.d=.lo)) $$@ : ,g' \
+	> $$@ ; \
+	[ $$$${PIPESTATUS[0]} -eq 0 ] || $$(RM) -v $$@
+
+endef
+
+$(foreach module,$(modules) $(testmodules), \
+	$(eval $(call module_template,$(module))))
+
+######################################################################
+# Non module-specific rules:
+######################################################################
+
+# Dependency files:
+# Deriving source-file specific -I flags isn't feasible, and we don't
+#   want to copy stuff into $(stage_dir) before .d files are
+#   generated, so we just indiscriminately grab everything here.
+#%.d: CPPFLAGS += $(patsubst %,-I%/include,$(modules)) -Iinclude
+
+# If the compiler runs into an error and a blank dependency file is
+#   generated, we want to remove the blank dependency file, so that
+#   make will attempt to regenerate it again on the next invocation.
+# %.d: %.cpp
+# 	$(call cxx_dep_rule) ; [ $${PIPESTATUS[0]} -eq 0 ] || rm -v $@
+
+# %.d: %.c
+# 	$(call cc_dep_rule) ; [ $${PIPESTATUS[0]} -eq 0 ] || rm -v $@
+
+# Rules for test modules:
+
+vpath %.py $(patsubst %,%/bin,$(testmodules))
+$(test_dir)/bin/%.py: %.py | $(test_dir)/bin
+	cp $< $@
+
+# Rules for making directories:
+$(dirs):
+	mkdir -p $@
+
+# Make the .la files generated by libtool match the -lfoo pattern.
+.LIBPATTERNS += lib%.la
+
+configure: configure.ac aclocal.m4
+	autoconf
+
+# autoheader might not change config.h.in, so touch a stamp file.
+include/config.h.in: include/stamp-h.in
+include/stamp-h.in: configure.ac aclocal.m4
+	autoheader
+	echo timestamp > include/stamp-h.in
+
+include/config.h: include/stamp-h
+include/stamp-h: include/config.h.in config.status
+	./config.status
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck # || ./configure
+
+
+######################################################################
+# Phony targets:
+######################################################################
+
+.PHONY: \
+	$(modules) $(testmodules) \
+	all clean clobber deps distclean help install runtests tests uninstall
+
+
+.DEFAULT_GOAL := all
+all: $(modules)
+
+
+# Turn a string like foo/src/bar.cpp into $(build_dir)/foo/bar.lo .
+OBJ := $(addprefix $(build_dir)/,$(subst /src,,$(SRC)))
+OBJ := $(addsuffix .lo,$(basename $(OBJ)))
+
+clean:
+	@for t in $(clean_targets) ; do \
+	  echo $(RM) $$t ; \
+	       $(RM) $$t ; \
+	done
+	@for o in $(OBJ) ; do \
+	       $(LIBTOOL) --mode=clean $(RM) $$o ; \
+	done
+	@for d in $(addprefix $(build_dir)/,$(modules) $(testmodules)) ; do \
+		[ ! -d $$d ] || echo rmdir $$d ; \
+		[ ! -d $$d ] ||      rmdir $$d ; \
+	done
+	@[ ! -d $(build_dir) ] || echo rmdir $(build_dir)
+	@[ ! -d $(build_dir) ] ||      rmdir $(build_dir)
+	@$(RM) autoscan.log config.log
+	@echo Done.
+
+# Note that we don't want to delete config.status because that would
+#   mean that we would have to re-run configure every time we run a
+#   make clean.
+
+clobber: clean
+	$(RM) $(DEP)
+	@for t in $(BIN_INSTALL_LIST) $(LIB_INSTALL_LIST) ; do \
+	  $(LIBTOOL) --mode=clean $(RM) $$t ; \
+	done
+	@for t in $(ETC_INSTALL_LIST) $(INCLUDE_INSTALL_LIST)	\
+		$(SHARE_INSTALL_LIST) ; do \
+	  $(RM) $$t ; \
+	done
+	@for d in $(dirs) ; do \
+		[ ! -d $$d ] || echo rmdir $$d ; \
+		[ ! -d $$d ] ||      rmdir $$d ; \
+	done
+	$(RM) -r autom4te.cache
+	@echo Done.
+
+
+# This undocumented target just causes the dependencies to be
+#   generated.
+# We don't document this rule because at some pointed the distributed
+#   source package will already have the dependencies generated.
+# We remove $(stage_dir)/lib because the vpath rule above creates that
+#   directory, and keeping $(stage_dir)/lib around after just running
+#   "make deps" is confusing.
+deps:
+	@rmdir -p $(stage_dir)/lib --ignore-fail-on-non-empty
+
+
+distclean: clean
+	$(RM) Makefile include/config.h config.status config.cache config.log
+
+
+help:
+	@echo "  The following extra Makefile targets are available:"
+	@echo ""
+	@echo "  all       - Build all modules."
+	@echo "  clean     - Remove all $(clean_targets) files in the"
+	@echo "                appropriate directories, as well as object"
+	@echo "                (*.o) files."
+	@echo "  clobber   - Run make clean, and also remove all *.d files and"
+	@echo "                files, as well as some artifacts that the build"
+	@echo "                process generates."
+	@echo "  distclean - Run make clean, and also remove files generated by"
+	@echo "                the configure script."
+	@echo "  help      - This help message."
+	@echo "  install   - Install the package."
+	@echo "  runtests  - Build all unit tests, and also run the full test"
+	@echo "                suite."
+	@echo "  tests     - Build all unit tests."
+	@echo "  uninstall - Uninstall the package."
+
+
+install: all
+	@for f in $(LIB_INSTALL_LIST) ; do \
+	     $(LIBTOOL) --mode=install \
+		install -m 644 -D $$f $(prefix)/$${f#$(stage_dir)/} ; \
+	done
+	$(LIBTOOL) --mode=finish $(prefix)/lib
+	@for f in $(BIN_INSTALL_LIST) ; do \
+		target=$(prefix)/$${f#$(stage_dir)/} ; \
+		$(LIBTOOL) --mode=install \
+			install -D $$f $$target ; \
+		echo strip $$target ; \
+		     strip $$target ; \
+	done
+	@for f in \
+		$(ETC_INSTALL_LIST) \
+		$(INCLUDE_INSTALL_LIST) \
+		$(SHARE_INSTALL_LIST) \
+	; do \
+		echo install -m 644 -D $$f $(prefix)/$${f#$(stage_dir)/} ; \
+		     install -m 644 -D $$f $(prefix)/$${f#$(stage_dir)/} ; \
+	done
+
+
+runtests: tests
+	@[ $(PYTHON) != ":" ] || (echo "Python version >= 3.2/2.7 was not" \
+		"found by the configure script." && false)
+	cd $(test_dir)/bin && \
+	$(PYTHON) -B -m unittest $(testmodules)
+
+
+tests: $(testmodules)
+
+
+uninstall:
+	@for f in \
+		$(ETC_INSTALL_LIST) \
+		$(INCLUDE_INSTALL_LIST) \
+		$(SHARE_INSTALL_LIST) \
+	; do \
+		$(RM) $(prefix)/$${f#$(stage_dir)/} ; \
+	done
+	@for f in $(BIN_INSTALL_LIST) ; do \
+	     $(LIBTOOL) --mode=uninstall \
+		$(RM) $(prefix)/$${f#$(stage_dir)/} ; \
+	done
+	@for f in $(LIB_INSTALL_LIST) ; do \
+	     $(LIBTOOL) --mode=uninstall \
+		$(RM) $(prefix)/$${f#$(stage_dir)/} ; \
+	done
+	@for d in \
+		$(patsubst %,include/$(PKG_NAME)/%,$(modules)) \
+		include/$(PKG_NAME) \
+		$(patsubst %,etc/$(PKG_NAME)/%,$(modules)) \
+		etc/$(PKG_NAME) \
+		$(patsubst %,share/$(PKG_NAME)/%,$(modules)) \
+		share/$(PKG_NAME) \
+	; do \
+		[ ! -d $(prefix)/$$d ] || echo rmdir $(prefix)/$$d ; \
+		[ ! -d $(prefix)/$$d ] ||      rmdir $(prefix)/$$d ; \
+	done
+

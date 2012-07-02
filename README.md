@@ -4,14 +4,18 @@ The One True Makefile
 The purpose of this One True Makefile project is to provide a template
 for projects that use Autoconf, Libtool and Make, but not Automake.
 (I prefer not to use Automake, although obviously I like some of its
-brothers.)  If you're going to use this template project, you will
-probably want to already have a working knowledge of how Autoconf,
-Libtool and Make work, although if you're still learning, you might
-like to use the One True Makefile as a working example.  (This README
-won't be much of a tutorial, though.)  In order to understand the
-logic of e.g. what goes in `share` directories and what goes in `etc`
-directories, you should probably also have a basic familiarity with
-the Linux Filesystem Hierarchy Standard.
+brothers.)  It is placed in the public domain.  (I don't see a point
+of making a copyleft build process template, since if you have the
+edited build scripts, you by definition have the source code.)
+
+If you're going to use this template project, you will probably want
+to already have a working knowledge of how Autoconf, Libtool and Make
+work, although if you're still learning, you might like to use the One
+True Makefile as a working example.  (This README won't be much of a
+tutorial, though.)  In order to understand the logic of e.g. what goes
+in `share` directories and what goes in `etc` directories, you should
+probably also have a basic familiarity with the Linux Filesystem
+Hierarchy Standard.
 
 Scheme for include directives
 =============================
@@ -64,16 +68,16 @@ Makefile provides:
 
 2. Incremental builds.  (Make knows about all the dependencies, so
     everything Just Works with a minimum of compiling.  There is no
-    need running make clean every single compilation cycle.)
+    need to run `make clean` every single compilation cycle.)
 
 3. Automatic `#include` directive dependency generation.  (You need to
-    have a compiler that accepts the -MM flag, like gcc.)  However,
+    have a compiler that accepts the `-MM` flag, like gcc.)  However,
     please note that there's no way for the computer to know that
     e.g. your foo program depends on the baz module, and also on
-    libz.so, so you still have to specify library dependencies and
-    link targets in the module.mk files.
+    libz.so, so you still have to manually specify library
+    dependencies and link targets in the module.mk files.
 
-4. Avoidence of recursive make.  (See Miller's paper.)
+4. Avoidence of recursive Make.  (See Miller's paper.)
 
 5. Parallel building using Make's `-j` flag.  (This is robust and
     works well with incremental builds thanks to point 4).)
@@ -119,24 +123,31 @@ approaches; for example, I use implicit rules whenever possible.  This
 makes the build machinery more readable, easier to understand and
 easier to maintain.  If you feel overwhelmed reading the Makefile.in,
 I highly recommend reading the Recursive Make Considered Harmful paper
-by Miller.
+by Miller.  It's easy to find via Google.
 
 Usage
 =====
 
 This template setup should build a minimal example project right out
-of the box, using the standard autotools commands.  For example, if
-your project uses some libraries that happen to be installed in your
-`$HOME/.local` directory, you would run:
+of the box, using the standard Autotools commands.  That is, to build the minimal example, run:
+
+    autoconf
+    ./configure
+    make
+
+The included minimal example doesn't require any extra libraries, but
+as an example, if your project were to require some libraries that
+happen to be installed in your `$HOME/.local` directory, you would
+run:
 
     autoconf
     LDFLAGS=-L$HOME/.local/lib CPPFLAGS=-I$HOME/.local/include ./configure
     make
 
-After the the build process completes, the targets should be sitting
-in `Linux-stage`.  (I'm assuming you're running Linux, but if not, the
-slightly different name of the actual staging location should be
-obvious.)  You can verify everything is working by running:
+After the the build process completes, the final build targets should
+be sitting in `Linux-stage`.  (I'm assuming you're running Linux, but
+if not, the slightly different name of the actual staging directory
+should be obvious.)  You can verify everything is working by running:
 
     ./Linux-stage/bin/hello
 
@@ -149,7 +160,7 @@ feeling saucy.
 In order to adapt this template for your own project, you will
 probably want to do the following:
 
-* Replace this `README.ms` file with one that is appropriate for your
+* Replace this `README.md` file with one that is appropriate for your
     project.  You should probably also replace (or delete) the
     `COPYING` file, and maybe the `INSTALL` file, if you've seen fit
     to modify the build/install process.

@@ -13,6 +13,9 @@ logic of e.g. what goes in `share` directories and what goes in `etc`
 directories, you should probably also have a basic familiarity with
 the Linux Filesystem Hierarchy Standard.
 
+Rules are set up with C++ in mind, although it should be easy to add
+rules for other languages.
+
 Scheme for include directives
 =============================
 

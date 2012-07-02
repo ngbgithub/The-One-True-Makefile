@@ -20,46 +20,6 @@ Hierarchy Standard.
 Rules are set up with C++ in mind, although it should be easy to add
 rules for other languages.
 
-Scheme for `#include` directives
-=============================
-
-Please note that, if your project provedes e.g. a
-`MyProject::Foo::Foodle` class, then you should specify its interface
-with an include directive that mirrors the namespace hierarchy, like
-so:
-
-    #include "MyProject/Foo/Foodle.h"
-
-Thus, if the interface file is going to end up installed in a normal
-way, at `/usr/local/include/MyProject/Foo/Foodle.h`, then the people
-who use your library only have to give the compiler a
-`-I/usr/local/include` flag, and in fact compilers usually already
-have that path specified by default, so your users actually don't have
-to do anything.  The `#include` directives mirror the namespace, and
-compiling Just Works.
-
-Please note that some people use a dirty scheme whereby their include
-directive for a file installed somewhere like
-`/usr/local/include/MyProject/Foo/Foodle.h` looks like this:
-
-    #include "Foo/Foodle.h" // Bad!
-
-This means that their users have to pass the compiler a
-`-I/usr/local/include/MyProject` flag, since the compiler doesn't know
-about the Foo subdirectory by default.  In fact, the user has to
-include another compiler flag for every dependency that does this.
-
-But you don't do that, because you're better than that.
-
-(Please note that my rant is somewhat spoiled by the fact that the
-included copy of TinyXML (by Lee Thomason) does not use this project's
-namespace (i.e. something like
-`OneTrueMakefile::TinyXML::TiXmlDocument`) because someone else wrote
-the (excellent) TinyXML library, and I just dropped it into this One
-True Makefile project.  I didn't change how namespaces work in TinyXML
-because I didn't want to muck around in the code too much, for fear of
-introducing a subtle bug somewhere.)
-
 Features
 ========
 
@@ -81,7 +41,8 @@ Makefile provides:
     libz.so, so you still have to manually specify library
     dependencies and link targets in the module.mk files.
 
-4. Avoidence of recursive Make.  (See Miller's paper.)
+4. Avoidence of recursive Make.  (See Miller's paper.  Just google
+    it.)
 
 5. Parallel building using Make's `-j` flag.  (This is robust and
     works well with incremental builds thanks to point 4).)
@@ -129,11 +90,52 @@ easier to maintain.  If you feel overwhelmed reading the Makefile.in,
 I highly recommend reading the Recursive Make Considered Harmful paper
 by Miller.  It's easy to find via Google.
 
+Scheme for `#include` directives
+================================
+
+Please note that, if your project provides e.g. a
+`MyProject::Foo::Foodle` class, then you should specify its interface
+with an `#include` directive that mirrors the namespace hierarchy,
+like so:
+
+    #include "MyProject/Foo/Foodle.h"
+
+Thus, if the interface file is going to end up installed in a normal
+way, at `/usr/local/include/MyProject/Foo/Foodle.h`, then the people
+who use your library only have to give the compiler a
+`-I/usr/local/include` flag, and in fact compilers usually already
+have that path specified by default, so your users actually don't have
+to do anything.  The `#include` directives mirror the namespace, and
+compiling Just Works.
+
+Please note that some people use a dirty scheme whereby their include
+directive for a file installed somewhere like
+`/usr/local/include/MyProject/Foo/Foodle.h` looks like this:
+
+    #include "Foo/Foodle.h" // Bad!
+
+This means that their users have to pass the compiler a
+`-I/usr/local/include/MyProject` flag, since the compiler doesn't know
+about the Foo subdirectory by default.  In fact, the user has to
+include another compiler flag for every dependency that does this.
+
+But you don't do that, because you're better than that.
+
+(Please note that my rant is somewhat spoiled by the fact that the
+included copy of TinyXML (by Lee Thomason) does not use this project's
+namespace (i.e. something like
+`OneTrueMakefile::TinyXML::TiXmlDocument`), because someone else wrote
+the (excellent) TinyXML library, and I just dropped it into this One
+True Makefile project.  I didn't change how namespaces work in TinyXML
+because I didn't want to muck around in the code too much, for fear of
+introducing a subtle bug somewhere.)
+
 Usage
 =====
 
 This template setup should build a minimal example project right out
-of the box, using the standard Autotools commands.  That is, to build the minimal example, run:
+of the box, using the standard Autotools commands.  That is, to build
+the minimal example, run:
 
     autoconf
     ./configure
@@ -151,7 +153,11 @@ run:
 After the the build process completes, the final build targets should
 be sitting in `Linux-stage`.  (I'm assuming you're running Linux, but
 if not, the slightly different name of the actual staging directory
-should be obvious.)  You can verify everything is working by running:
+should be obvious.  Also, I've named the build, staging and test
+directories based on the output of `uname` so that you can have
+multiple architectures building in the same network-mounted directory,
+but if you don't like that naming convention, it's easy to change.)
+You can verify everything is working by running:
 
     ./Linux-stage/bin/hello
 
@@ -168,7 +174,7 @@ feeling saucy.  If experimenting with /usr/local gives you the creeps,
 you could run `configure` with a `--prefix=$HOME/tmp/local` flag to
 install everything into a temp directory.
 
-The point of this template is to start you off with a lot of
+Now: the point of this template is to start you off with a lot of
 boilerplate written.  That doesn't mean that you won't have to
 maintain your build process; this will just start you off with some
 nice features like `make uninstall`, so that you don't have to write
@@ -212,8 +218,8 @@ do the following:
     by the `make install` target.  Everything uses the bottom source
     directory as the base directory, and the One True Makefile is set
     up to mirror the organization of the staging directory.  Things in
-    etc or shared will just get copied around, since they don't need
-    to be compiled.
+    `etc` or `share` will just get copied around by Make, since they
+    don't need to be compiled.
 
     For example, if you made a `baz` module with a config file at
     `baz/etc/my_project/baz/bazqux.conf`, then you want to make sure
@@ -307,6 +313,14 @@ do the following:
     `Makefile.in` is, the dot refers to that base directory.)
 
 * Run `autoheader`.
+
+Note that, while `make clean` works automagically, there is also a
+`make clobber` target.  This removes final build targets and
+dependency (`*.d`) files.  It also removes unit test build targets;
+however, that part isn't automatic, in the sense that the logic for
+removing unit test build targets has to be manually added to the
+bottom of the unit test modules' `module.mk` files.  (Check out the
+bottom of `test_foo/module.mk` to see what I mean.)
 
 Troubleshooting
 ===============

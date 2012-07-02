@@ -250,13 +250,15 @@ $$(test_dir)/bin/%: $$(build_dir)/$(1)/%.lo | $$(test_dir)/bin
 #   attempt to regenerate it again on the next invocation.
 $(1)/src/%.d: $(1)/src/%.cpp
 	$$(cxx_mm) $$(CPPFLAGS) $$< | \
-	sed 's,.*\.o[ :]*,$$(build_dir)/$(1)/$$(notdir $$(@:.d=.lo)) $$@ : ,g' \
+	sed \
+	's,.*\.o[ :]*,$$$$(build_dir)/$(1)/$$(notdir $$(@:.d=.lo)) $$@ : ,g' \
 	> $$@ ; \
 	[ $$$${PIPESTATUS[0]} -eq 0 ] || $$(RM) -v $$@
 
 $(1)/src/%.d: $(1)/src/%.c
 	$$(cc_mm) $$(CPPFLAGS) $$< | \
-	sed 's,.*\.o[ :]*,$$(build_dir)/$(1)/$$(notdir $$(@:.d=.lo)) $$@ : ,g' \
+	sed \
+	's,.*\.o[ :]*,$$$$(build_dir)/$(1)/$$(notdir $$(@:.d=.lo)) $$@ : ,g' \
 	> $$@ ; \
 	[ $$$${PIPESTATUS[0]} -eq 0 ] || $$(RM) -v $$@
 

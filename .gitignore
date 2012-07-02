@@ -20,7 +20,7 @@ autom4te.cache
 # "Junk"
 *.log
 *~
-#*
+\#*
 
 # Directories with build targets in them.
 *-build

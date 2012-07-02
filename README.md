@@ -267,11 +267,14 @@ do the following:
 
     <pre><code>#include "MyProject/tinyxml/tinyxml.h"</code></pre>
 
+* Rename all the directories named `one_true_makefile` to your
+    project's name.
+
 * Once your modules are set up, run `autoscan`, and replace
     `configure.ac`.  It is convenient to have your own Autoconf tests
-    in a separate file (or files), so you should put your own Autoconf
-    tests in the `project.m4` file, and add a line like this to your
-    new `configure.ac`:
+    in a separate file (or files), so it is probably a good idea to
+    put your own Autoconf tests in the `project.m4` file, and add a
+    line like this to your new `configure.ac`:
 
     <pre><code>m4_include([project.m4])</code></pre>
 
@@ -282,7 +285,7 @@ do the following:
     that I've put `config.h` in subdirectory called `include`, instead
     of with all the build stuff in the base directory, so you will
     also want to modify the `AC_CONFIG_HEADERS` and `AC_CONFIG_SRCDIR`
-    lines in `configure.ac` to this:
+    lines in a newly generated `configure.ac` to this:
 
     <pre><code>AC_CONFIG_SRCDIR([include/config.h.in])
     AC_CONFIG_HEADERS([include/config.h])</code></pre>
@@ -305,7 +308,7 @@ do the following:
 
 * Run `autoheader`.
 
-TROUBLESHOOTING
+Troubleshooting
 ===============
 
 If something is screwed up, sometimes Make will silently die, rather

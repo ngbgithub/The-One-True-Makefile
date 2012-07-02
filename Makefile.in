@@ -44,7 +44,6 @@ modules := \
 testmodules := \
 	test_tinyxml	test_foo 
 
-
 # The module.mk files in each module directory will add to these
 #   variables.
 SRC =

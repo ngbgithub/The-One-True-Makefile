@@ -159,7 +159,7 @@ probably want to do the following:
     the "Hello, world!"  functionality provided by the foo module will
     be super-useful for your project, anyway.)
 
-* Edit Makefile.in:
+* Edit `Makefile.in`:
 
     - Change `pkg_name := one_true_makefile` to refer to the name of
         your project.
@@ -169,16 +169,16 @@ probably want to do the following:
         the `tinyxml` module, and added two more modules called bar
         and baz, you would change this section to:
 
-    modules := \
-    	tinyxml	bar	baz
+        <pre><code>modules := \
+            tinyxml	bar	baz</code></pre>
 
     - Change the `testmodules :=` area to reflect the names of your
         unit test modules.  For example, if you used the `testfoo`
         module as a template to make a `testbar` module, you would
         change this section to:
 
-    modules := \
-    	testbar
+        <pre><code>modules := \
+            testbar</code></pre>
 
 * Edit your `module.mk` files to list all of the files you want to be
     listed as dependencies, and all the files you want to be affected
@@ -192,7 +192,7 @@ probably want to do the following:
     `baz/etc/my_project/baz/bazqux.conf`, then you want to make sure
     `baz/module.mk` has this line:
 
-    baz_etcs := $(stage_dir)/etc/$(PKG_NAME)/baz/bazqux.conf
+    <pre><code>baz_etcs := $(stage_dir)/etc/$(PKG_NAME)/baz/bazqux.conf</code></pre>
 
     On the other hand, maybe you want your `bazqux.conf` file to go in
     the bottom of `etc`, instead of in a series of subdirectories.  In
@@ -200,7 +200,7 @@ probably want to do the following:
     located at `baz/etc/bazqux.conf`, and line in `baz/module.mk`
     would look like this:
 
-    baz_etcs := $(stage_dir)/etc/bazqux.conf
+    <pre><code>baz_etcs := $(stage_dir)/etc/bazqux.conf</code></pre>
 
     In the first case, running `make install` with the default
     `/usr/local` value as your install prefix would install that
@@ -232,11 +232,11 @@ probably want to do the following:
     new project is called MyProject, you'll have to change lines that
     say
 
-    #include "one_true_makefile/tinyxml/tinyxml.h"
+    <pre><code>#include "one_true_makefile/tinyxml/tinyxml.h"</code></pre>
 
    to
 
-    #include "MyProject/tinyxml/tinyxml.h"
+    <pre><code>#include "MyProject/tinyxml/tinyxml.h"</code></pre>
 
 * Once your modules are set up, run `autoscan`, and replace
     `configure.ac`.  It is convenient to have your own Autoconf tests
@@ -244,7 +244,7 @@ probably want to do the following:
     tests in the `project.m4` file, and add a line like this to your
     new `configure.ac`:
 
-    m4_include([project.m4])
+    <pre><code>m4_include([project.m4])</code></pre>
 
     The provided `project.m4` file has a handful of tests you might
     find useful.
@@ -254,8 +254,8 @@ probably want to do the following:
     directory, so you will also want to modify the `AC_CONFIG_HEADERS`
     and `AC_CONFIG_SRCDIR` lines to this:
 
-    AC_CONFIG_SRCDIR([include/config.h.in])
-    AC_CONFIG_HEADERS([include/config.h])
+    <pre><code>AC_CONFIG_SRCDIR([include/config.h.in])
+    AC_CONFIG_HEADERS([include/config.h])</code></pre>
 
     If you don't like the `include/config.h` scheme, it's easy to
     change; you just have to change some lines in `Makefile.in`, near

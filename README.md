@@ -4,9 +4,9 @@ The One True Makefile
 The purpose of this One True Makefile project is to provide a template
 for projects that use Autoconf, Libtool and Make, but not Automake.
 (I prefer not to use Automake, although obviously I like some of its
-brothers.)  It is placed in the public domain.  (I don't see a point
-of making a copyleft build process template, since if you have the
-edited build scripts, you by definition have the source code.)
+brothers.)  It is placed in the public domain, since I don't see the
+point of making a copyleft build process template, since if you have
+the edited build scripts, you by definition have the source code.
 
 If you're going to use this template project, you will probably want
 to already have a working knowledge of how Autoconf, Libtool and Make
@@ -20,7 +20,7 @@ Hierarchy Standard.
 Rules are set up with C++ in mind, although it should be easy to add
 rules for other languages.
 
-Scheme for include directives
+Scheme for `#include` directives
 =============================
 
 Please note that, if your project provedes e.g. a
@@ -155,14 +155,26 @@ should be obvious.)  You can verify everything is working by running:
 
     ./Linux-stage/bin/hello
 
-Note that the hello program successfully finds the `libfoo.so` shared
-library, thanks to Libtool.
+Note that the `hello` program successfully finds the `libfoo.so`
+shared library, thanks to Libtool.
 
-You could also do a `make install` and a `make uninstall` if you're
-feeling saucy.
+You can build the unit tests by running `make tests`, and you can run
+them by running `make runtests`.  The installation process will not
+install unit tests into the install prefix with all the other build
+targets; unit tests are in their "own little world."
 
-In order to adapt this template for your own project, you will
-probably want to do the following:
+You could also do a `make install` and a `make uninstall`, if you're
+feeling saucy.  If experimenting with /usr/local gives you the creeps,
+you could run `configure` with a `--prefix=$HOME/tmp/local` flag to
+install everything into a temp directory.
+
+The point of this template is to start you off with a lot of
+boilerplate written.  That doesn't mean that you won't have to
+maintain your build process; this will just start you off with some
+nice features like `make uninstall`, so that you don't have to write
+another `uninstall` rule every time you start a new project.  In order
+to adapt this template for your own project, you will probably want to
+do the following:
 
 * Replace this `README.md` file with one that is appropriate for your
     project.  You should probably also replace (or delete) the
@@ -212,7 +224,7 @@ probably want to do the following:
     On the other hand, maybe you want your `bazqux.conf` file to go in
     the bottom of `etc`, instead of in a series of subdirectories.  In
     that case, then in your `baz` module the config file would be
-    located at `baz/etc/bazqux.conf`, and line in `baz/module.mk`
+    located at `baz/etc/bazqux.conf`, and the line in `baz/module.mk`
     would look like this:
 
     <pre><code>baz_etcs := $(stage_dir)/etc/bazqux.conf</code></pre>
@@ -221,11 +233,13 @@ probably want to do the following:
     `/usr/local` value as your install prefix would install that
     config file to `/usr/local/etc/my_project/baz/bazqux.conf`.  In
     the second case, it would get installed to
-    `/usr/local/etc/bazqux.conf`.  That is, you specify build targets
-    in the staging directory (even if the "building" is just trivial
-    copying).  The organization of your module, the organization of
-    the staging directory, and the organization of the final install
-    directory (e.g. `/usr/local`) will all mirror each other.
+    `/usr/local/etc/bazqux.conf`.  That is, in your `module.mk` file,
+    you specify build targets in the staging directory (even if the
+    "building" is just trivial copying).  The Makefile manages
+    everything with implicit rules, and works such that the
+    organization of your module, the organization of the staging
+    directory, and the organization of the final install directory
+    (e.g. `/usr/local`) will all mirror each other.
 
     Note that your `module.mk` files will probably also need to
     include logic regarding linking, near the bottom.  Be sure to
@@ -235,7 +249,7 @@ probably want to do the following:
     file.
 
     Also note that `*.h` and `*.hpp` files that aren't going to be
-    installed should *not* be mentioned in the `module.mk`.  The
+    installed should *not* be mentioned in the `module.mk` files.  The
     dependency autogeneration feature from gcc will deal with them,
     and since they aren't going to be installed, there's no reason to
     list them manually anywhere.
@@ -264,28 +278,30 @@ probably want to do the following:
     The provided `project.m4` file has a handful of tests you might
     find useful.
 
-    Also, I've assumed that `config.h` will be in subdirectory called
-    `include`, instead of with all the build stuff in the base
-    directory, so you will also want to modify the `AC_CONFIG_HEADERS`
-    and `AC_CONFIG_SRCDIR` lines to this:
+    One slightly non-standard aspect of the One True Makefile setup is
+    that I've put `config.h` in subdirectory called `include`, instead
+    of with all the build stuff in the base directory, so you will
+    also want to modify the `AC_CONFIG_HEADERS` and `AC_CONFIG_SRCDIR`
+    lines in `configure.ac` to this:
 
     <pre><code>AC_CONFIG_SRCDIR([include/config.h.in])
     AC_CONFIG_HEADERS([include/config.h])</code></pre>
 
+    Our default version of `configure.ac` already has these changes
+    made, but if and when you run `autoscan` and replace
+    `configure.ac`, you'll have to re-do them.  (Minimizing the amount
+    of stuff you have to re-do after running `autoscan` is the purpose
+    of the `project.m4` scheme.)
+
     If you don't like the `include/config.h` scheme, it's easy to
     change; you just have to change some lines in `Makefile.in`, near
-    the configure rules.  (It should be obvious what to change.)
-    Also, `foo/module.m`k has a `-Iinclude` compiler flag, so if you
-    don't like the `include/config.h` scheme, your modules should
-    specify `-I.` instead.  (The dot after the -I is not a typo.
-    Since all paths are relative to the base directory, where
+    the configure rules, along with a line near the top of
+    `project.m4`.  (In both cases, it should be obvious what to
+    change.)  Also, `foo/module.mk` has a `-Iinclude` compiler flag,
+    so if you don't like the `include/config.h` scheme, your modules
+    should specify `-I.` instead.  (The dot after the -I is not a
+    typo.  Since all paths are relative to the base directory, where
     `Makefile.in` is, the dot refers to that base directory.)
-
-    Our default version of `configure.ac` already has these two
-    changes made, but if and when you run `autoscan`, you'll have to
-    re-do them.  (Minimizing the amount of stuff you have to re-do
-    after running `autoscan` is the purpose of the `project.m4`
-    scheme.)
 
 * Run `autoheader`.
 
@@ -324,7 +340,7 @@ entire build process by running:
 line.)
 
 Often, the problem will be in a specific spot in `Makefile.in` or one
-of the `module.mk` files.  A way to identify the problem child is to
+of the `module.mk` files.  A way to identify the problem area is to
 edit the `modules :=` area of `Makefile.in` and remove one module,
 leaving all the other modules in the list.  If you can get it to say
 `make: Nothing to do for 'all'.`, then the module you've removed is
@@ -335,16 +351,17 @@ an error message without getting to the end.  In that case, you may
 have to play games with removing multiple modules at once.)
 
 Another helpful source of information is to look in the `Linux-build`
-directory (or whatever you've named it); if `foo/module.mk` is the
-problem area, and `build/foo/foo.lo` exists, but `Linux-stage/bin`
-does not contain the `foo` executable, then it apparently died before
-creating the `foo` executable but after successfully compiling
-`foo.lo`, which may be suggestive.  (This isn't definitive-- maybe the
-`foo` executable also has other dependencies, and one of those is
-causing the problem.)
+directory (or whatever you've named it).  For example, if
+`foo/module.mk` contains the problem area, and `build/foo/foo.lo`
+exists, but `Linux-stage/bin` does not contain the `foo` executable,
+then Make apparently died before creating the `foo` executable but
+after successfully compiling `foo.lo`.  Maybe that might suggest
+something to you.  (This isn't definitive-- maybe the `foo` executable
+also has other dependencies, and one of those is causing the problem.)
 
 Problems with Make can be opaque sometimes.  At one point I had a
-problem with the `stamp-h.in` logic in `Makefile.in`, and it seemed
-like Make was dying in one of the modules, in a completely unrelated
-spot, since that module happened to look at `include/config.h`.
+problem with the `include/stamp-h.in` logic in `Makefile.in`, and it
+seemed like Make was dying in one of the modules, in a completely
+unrelated spot, since that module happened to look at
+`include/config.h`.
 

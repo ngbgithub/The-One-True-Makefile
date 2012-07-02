@@ -261,11 +261,10 @@ do the following:
     list them manually anywhere.
 
 * If you're keeping tinyxml, and you've renamed your package from
-    something other than `one_true_makefile` (which is
-    understandable<sup>[1][1]</sup>), then you'll need to edit the
-    tops of the tinyxml headers and source files to reflect that.  For
-    example, if your new project is called MyProject, you'll have to
-    change lines that say
+    something other than `one_true_makefile` (which is understandable),
+    then you'll need to edit the tops of the tinyxml headers and source
+    files to reflect that.  For example, if your new project is called
+    MyProject, you'll have to change lines that say
 
     <pre><code>#include "one_true_makefile/tinyxml/tinyxml.h"</code></pre>
 
@@ -382,5 +381,3 @@ seemed like Make was dying in one of the modules, in a completely
 unrelated spot, since that module happened to look at
 `include/config.h`.
 
-[1]: That is, of course, unless by an amazing coincidence your project
-is also named "The One True Makefile."  "1"

@@ -17,6 +17,9 @@ in `share` directories and what goes in `etc` directories, you should
 probably also have a basic familiarity with the Linux Filesystem
 Hierarchy Standard.
 
+Rules are set up with C++ in mind, although it should be easy to add
+rules for other languages.
+
 Scheme for include directives
 =============================
 
@@ -48,13 +51,14 @@ include another compiler flag for every dependency that does this.
 
 But you don't do that, because you're better than that.
 
-(Please note that my rant is somewhat spoiled by the fact that tinyxml
-does not use this project's namespace (i.e. something like
-`OneTrueMakefile::TinyXML::TiXmlDocument`) because someone else (Lee
-Thomason) wrote the (excellent) TinyXML library, and I just dropped it
-into this One True Makefile project.  I didn't change how namespaces
-work in TinyXML because I didn't want to muck around in the code too
-much, for fear of introducing a subtle bug somewhere.)
+(Please note that my rant is somewhat spoiled by the fact that the
+included copy of TinyXML (by Lee Thomason) does not use this project's
+namespace (i.e. something like
+`OneTrueMakefile::TinyXML::TiXmlDocument`) because someone else wrote
+the (excellent) TinyXML library, and I just dropped it into this One
+True Makefile project.  I didn't change how namespaces work in TinyXML
+because I didn't want to muck around in the code too much, for fear of
+introducing a subtle bug somewhere.)
 
 Features
 ========

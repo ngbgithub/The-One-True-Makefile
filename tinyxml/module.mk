@@ -39,11 +39,11 @@ tinyxml_cppflags := -DTIXML_USE_STL=YES -Itinyxml/include
 ##########################################################
 
 SRC += $(tinyxml_src)
-BIN_INSTALL_LIST +=
+BIN_INSTALL_LIST += $(tinyxml_bins)
 LIB_INSTALL_LIST += $(tinyxml_libs)
 ETC_INSTALL_LIST += $(tinyxml_includes)
-SHARE_INSTALL_LIST +=
-INCLUDE_INSTALL_LIST +=
+SHARE_INSTALL_LIST += $(tinyxml_shares)
+INCLUDE_INSTALL_LIST += $(tinyxml_includes)
 
 ##########################################################
 # Dependencies and rules:

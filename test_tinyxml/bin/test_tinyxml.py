@@ -38,14 +38,11 @@ def _change_dir_back_when_done(path):
     an error, in a clean way.
     '''
     orig = os.getcwd()
-    print('cwd 1: ', os.getcwd())
     try:
         os.chdir(path)
-        print('cwd 2: ', os.getcwd())
         yield 1
     finally:
         os.chdir(orig)
-        print('cwd 3: ', os.getcwd())
 
 
 def _findShareSubdir():

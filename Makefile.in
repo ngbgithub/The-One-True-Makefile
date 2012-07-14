@@ -450,11 +450,10 @@ uninstall:
 	; do \
 		$(RM) $(prefix)/$${f#$(stage_dir)/} ; \
 	done
-	@for f in $(BIN_INSTALL_LIST) ; do \
-	     $(LIBTOOL) --mode=uninstall \
-		$(RM) $(prefix)/$${f#$(stage_dir)/} ; \
-	done
-	@for f in $(LIB_INSTALL_LIST) ; do \
+	@for f in \
+		$(BIN_INSTALL_LIST) \
+		$(LIB_INSTALL_LIST) \
+	; do \
 	     $(LIBTOOL) --mode=uninstall \
 		$(RM) $(prefix)/$${f#$(stage_dir)/} ; \
 	done

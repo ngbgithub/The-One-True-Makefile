@@ -30,9 +30,9 @@ Makefile provides:
 
 1. Modularity.
 
-2. Incremental builds.  (Make knows about all the dependencies, so
+2. Incremental builds.  Make knows about all the dependencies, so
     everything Just Works with a minimum of compiling.  There is no
-    need to run `make clean` every single compilation cycle.)
+    need to run `make clean` every single compilation cycle.
 
 3. Automatic `#include` directive dependency generation.  (You need to
     have a compiler that accepts the `-MM` flag, like gcc.)  However,
@@ -41,11 +41,11 @@ Makefile provides:
     libz.so, so you still have to manually specify library
     dependencies and link targets in the module.mk files.
 
-4. Avoidence of recursive Make.  (See Miller's paper.  Just google
-    it.)
+4. Avoidence of recursive Make.  (See Miller's paper; it's easy to
+    find with google.)
 
-5. Parallel building using Make's `-j` flag.  (This is robust and
-    works well with incremental builds thanks to point 4).)
+5. Parallel building using Make's `-j` flag.  This is robust and works
+    well with incremental builds thanks to point 4).
 
 6. Unit tests, build artifacts, and final output all go in their own
     dynamically-generated subdirectories.  Because of Libtool, you can
@@ -54,8 +54,7 @@ Makefile provides:
     install.
 
 7. A `make uninstall` target.  (I wish more autotools-based projects
-    provided that.)  (You may also be interested in the trivial "make
-    help" rule.)
+    provided that.)
 
 8. A unit testing framework that leverages Python's unittest library.
     (Yes, unittest is designed for Python projects, but it's pretty
@@ -379,5 +378,8 @@ Problems with Make can be opaque sometimes.  At one point I had a
 problem with the `include/stamp-h.in` logic in `Makefile.in`, and it
 seemed like Make was dying in one of the modules, in a completely
 unrelated spot, since that module happened to look at
-`include/config.h`.
+`include/config.h`.  Again: using the One True Makefile as a template
+does not save you from ever having to debug Makefiles again.  It just
+saves you from having to write a lot of boilerplate every time you
+start a new project.
 

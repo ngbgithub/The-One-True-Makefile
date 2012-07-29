@@ -5,7 +5,7 @@ from __future__ import print_function
 import contextlib, os, subprocess, unittest
 
 
-class TestPmwebsockd(unittest.TestCase):
+class TestTinyXML(unittest.TestCase):
 
     def test_xmltest(self):
 

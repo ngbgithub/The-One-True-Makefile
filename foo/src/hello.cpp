@@ -1,14 +1,14 @@
-#include <algorithm> // min()
-#include <iostream>
-#include <stdexcept>
 #include "config.h"
 #include <errno.h>
 #include <unistd.h> // readlink()
+
+#include <algorithm> // min()
 #include <cstring> // strerror()
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#define TIXML_USE_STL YES
-#include "one_true_makefile/tinyxml/tinyxml.h"
+#include "one_true_makefile/tinyxml2/tinyxml2.h"
 
 // <rant>
 // Please note that hello.hpp is intentionally in src/, and not
@@ -17,8 +17,8 @@
 //   .hpp and .h files.  Rather, its purpose is to expose interfaces
 //   to other modules or programs.  Since we are not exposing the
 //   contents of hello.cpp to any other programs or modules, we are
-//   not exposing its interface, and thus we are not putting it in an
-//   include directory.
+//   not exposing its interface, and thus we are not putting hello.hpp
+//   in an include directory.
 // In contrast, for the tinyxml module, we elect to expose an
 //   interface, so it has header files in an include directory.
 // Running "make install" will cause the tinyxml headers to be
@@ -44,12 +44,14 @@
 
 // Declarations:
 namespace {
-  TiXmlDocument getDoc(const char * const filename);
+
   std::string binPrefix();
-  const TiXmlNode * getChild(const TiXmlNode * const parent,
-			     const char * const name =NULL,
-			     const size_t index =0);
-  std::string getWord(const TiXmlDocument & doc,
+  void load(tinyxml2::XMLDocument & doc,
+	    const std::string & filename);
+  const tinyxml2::XMLNode * getChild(const tinyxml2::XMLNode * const parent,
+				     const char * const name =NULL,
+				     const size_t index =0);
+  std::string getWord(const tinyxml2::XMLDocument & doc,
 		      const size_t index);
 }
 
@@ -58,16 +60,27 @@ using namespace std;
 
 // Definitions:
 
+/// This is a dumb little demo function that opens an XML document and
+///   returns the value of some particular node.  (We expect this to
+///   be "Hello".)
 std::string word0()
 {
-  const string filename = ::binPrefix() \
+  // Infer our XML filename.
+  const string filename = ::binPrefix() 
     + "/share/one_true_makefile/foo/hello.xml";
-  TiXmlDocument doc = ::getDoc(filename.c_str());
+
+  // Open our doc.
+  tinyxml2::XMLDocument doc;
+  ::load(doc, filename);
+
+  // Find the value of the text node that is a child of /content/word.
   return ::getWord(doc, 0);
 
 } // word0()
 
 
+/// This is a dumb little demo function that simply returns the word
+///   "world".
 std::string word1()
 {
   return std::string("world");
@@ -77,19 +90,10 @@ std::string word1()
 
 namespace {
 
-  TiXmlDocument getDoc(const char * const filename)
-  {
-    TiXmlDocument doc(filename);
-    if(!doc.LoadFile()) {
-      string err = "Error loading file: ";
-      err += filename;
-      throw runtime_error(err);
-    }
-    return doc;
-    
-  } // ::getDoc()
-
-
+  // Return the prefix directory, assuming that the current executable
+  //   is located in a bin subdirectory.  For example, if this
+  //   executable is /usr/local/bin/blah, then binPrefix() will return
+  //   "usr/local".
   std::string binPrefix()
   {
     const size_t BUFFSIZE = 200;
@@ -133,30 +137,67 @@ namespace {
   } // ::binPrefix()
 
 
-  const TiXmlNode * getChild(const TiXmlNode * const parent,
-			     const char * const name /*=NULL*/,
-			     const size_t index /*=0*/) {
-    const TiXmlNode * child;
+  // Open the XMLDocument and throw an exception if there's an error.
+  void load(tinyxml2::XMLDocument & doc,
+	    const std::string & filename)
+  {
+    if(tinyxml2::XML_NO_ERROR != doc.LoadFile(filename.c_str())) {
+      string err = "Error loading file: ";
+      err += filename;
+      throw runtime_error(err);
+    }
+  } // ::load()
+
+
+  // Find a particular child of the specified node.  If name is not
+  //   null, getChild() will return an XMLElement with that particular
+  //   name.  If index is not zero, then assuming that there are at
+  //   least that many matches, getChild() will return that match.
+  const tinyxml2::XMLNode * getChild(const tinyxml2::XMLNode * const parent,
+				     const char * const name /*=NULL*/,
+				     const size_t index /*=0*/)
+  {
+    const tinyxml2::XMLNode * child;
+
+    // If the user specified a particular node name, we have to use
+    //   FirstChildElement(), but if name is NULL, we have
+    //   FirstGetChild(), instead of just passing NULL to
+    //   FirstChildElement().  This is because passing NULL to
+    //   FirstChildElement() means "Give me the first child element,
+    //   with any name," which is not what we want, since we don't
+    //   just want child elements.  Instead, if name is NULL, we'd
+    //   also like to get child nodes which are not elements
+    //   (e.g. text nodes), and which would therefore not be caught by
+    //   GetChildElement().  (In other words, GetChildElement()
+    //   returns XMLElements, not XMLNodes.)
     if(name) {
-      child = parent->FirstChild(name);
+      child = parent->FirstChildElement(name);
       if(!child) {
-	throw runtime_error(string("Unable to find child node named")+name);
+	throw runtime_error(string("Unable to find child element named ")+name);
+      }
+      for(size_t i=1; i<index+1; ++i) {
+	child = child->NextSiblingElement(name);
+	if(!child) {
+	  ostringstream oss;
+	  oss << "Only " << i << (i>1?" elements":" element") << " named "
+	      << name << "found";
+	  throw runtime_error(oss.str());
+	}
       }
     }
+
     else {
       child = parent->FirstChild();
       if(!child) {
-	throw runtime_error("Unable to find child node");
+	throw runtime_error("Unable to find any child nodes");
       }
-    }      
-
-    for(size_t i=1; i<index+1; ++i) {
-      child = child->NextSibling(name);
-      if(!child) {
-	ostringstream oss;
-	oss << "Only " << i << (i>1?" nodes":" node") << " named " << name
-	    << "found";
-	throw runtime_error(oss.str());
+      for(size_t i=1; i<index+1; ++i) {
+	child = child->NextSibling();
+	if(!child) {
+	  ostringstream oss;
+	  oss << "Only " << i << (i>1?" nodes":" node") << " found";
+	  throw runtime_error(oss.str());
+	}
       }
     }
 
@@ -165,15 +206,19 @@ namespace {
   } // ::getChild()
 
 
-  std::string getWord(const TiXmlDocument & doc,
-		      const size_t index) {
-    const TiXmlNode * const content = ::getChild(&doc, "content");
-    const TiXmlNode * const word = ::getChild(content, "word", index);
-    const TiXmlNode * const text  = ::getChild(word);
-    const TiXmlText * const asText = text->ToText();
+  // Walk down an XML document, and find the value of the text node
+  //   that is a child of the /content/word element.
+  std::string getWord(const tinyxml2::XMLDocument & doc,
+		      const size_t index)
+  {
+    const tinyxml2::XMLNode * const content = ::getChild(&doc, "content");
+    const tinyxml2::XMLNode * const word = ::getChild(content, "word", index);
+    const tinyxml2::XMLNode * const text  = ::getChild(word);
+    const tinyxml2::XMLText * const asText = text->ToText();
     if(!asText) {
       throw runtime_error("Error converting word child to text");
     }
+
     return string(asText->Value());
 
   } // ::getWord()

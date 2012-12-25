@@ -33,7 +33,7 @@ foo_prod := \
 foo_deps := \
 	$(addsuffix .d,$(basename $(foo_src)))
 
-foo_cppflags := -Iinclude -Itinyxml/include
+foo_cppflags := -Iinclude -Itinyxml2/include
 
 ##########################################################
 # Add to our list of what the Makefile manages.
@@ -57,15 +57,15 @@ $(foo_obj): CPPFLAGS += $(foo_cppflags)
 
 # This implicit rule works because foo.cpp is the first in the
 #   $(foo_src) list, which means it's first in the $(foo_obj) list.
-# Note that make is smart enough to see -ltinyxml-otm and know it has
-#   to build $(stage_dir)/lib/libtinyxml-otm.so, through the magic of
+# Note that make is smart enough to see -ltinyxml2-otm and know it has
+#   to build $(stage_dir)/lib/libtinyxml2-otm.so, through the magic of
 #   vpath directives.
 # If we felt it were helpful, we might add an order-only dependency
 #   for hello.xml since it's required at runtime, although it's not
 #   necessary if all we're going to do is "make foo" and not "make
 #   Linux-stage/bin/foo".
 $(stage_dir)/bin/foo: \
-	$(foo_obj) -ltinyxml-otm \
+	$(foo_obj) -ltinyxml2-otm \
 	| $(stage_dir)/bin
 
 ##########################################################

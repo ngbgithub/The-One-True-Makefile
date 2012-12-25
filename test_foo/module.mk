@@ -78,13 +78,13 @@ $(test_foo_obj): CPPFLAGS += $(test_foo_cppflags)
 $(test_dir)/bin/test_foo_word0: \
 	$(build_dir)/test_foo/test_foo_word0.lo \
 	$(build_dir)/foo/hello.lo \
-	-ltinyxml-otm \
+	-ltinyxml2-otm \
 	| $(test_dir)/bin
 
 $(test_dir)/bin/test_foo_word1: \
 	$(build_dir)/test_foo/test_foo_word1.lo \
 	$(build_dir)/foo/hello.lo \
-	-ltinyxml-otm \
+	-ltinyxml2-otm \
 	| $(test_dir)/bin
 
 ##########################################################

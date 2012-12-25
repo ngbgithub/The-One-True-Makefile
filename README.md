@@ -70,17 +70,18 @@ Makefile provides:
     (blasphemer!), it should be obvious how it works and how you can
     change it.
 
-10. I've included a copy of Lee Thomason's excellent TinyXML library,
+10. I've included a copy of Lee Thomason's excellent TinyXML2 library,
     since I like using xml for config files.  If you don't like and/or
-    need it, removing it is as easy as removing `tinyxml` from the
-    modules section of `Makefile.in`, and running `rm -rf tinyxml`.
+    need it, removing it is as easy as removing `tinyxml2` from the
+    modules section of `Makefile.in`, and running `rm -rf tinyxml2`.
     (This is an example of the modularity of which I spoke, up in
-    point 1).)  If you like TinyXML, you actually may want to consider
-    switching to TinyXML2.  Note that the actual library will be
-    called `libtinyxml-otm.so`, with a `-otm` at the end, in order to
-    avoid conflicts with any other `libtinyxml.so` shared library
-    files that may be installed.  (Again, if you don't like the `-otm`
-    suffix, it's easy to change.)
+    point 1).)  Note that the actual library will be called
+    `libtinyxml2-otm.so`, with a `-otm` at the end, in order to avoid
+    conflicts with any other `libtinyxml2.so` shared library files
+    that may be installed.  (Again, if you don't like the `-otm`
+    suffix, it's easy to change; in fact, you should probably change
+    that suffix to something that calls to mind the name of your
+    project.)
 
 Note that I have tried to provide the above benefits using minimalist
 approaches; for example, I use implicit rules whenever possible.  This
@@ -111,23 +112,24 @@ Please note that some people use a dirty scheme whereby their include
 directive for a file installed somewhere like
 `/usr/local/include/MyProject/Foo/Foodle.h` looks like this:
 
-    #include "Foo/Foodle.h" // Bad!
+    #include "Foodle.h" // Bad!
 
 This means that their users have to pass the compiler a
-`-I/usr/local/include/MyProject` flag, since the compiler doesn't know
-about the Foo subdirectory by default.  In fact, the user has to
-include another compiler flag for every dependency that does this.
+`-I/usr/local/include/MyProject/Foo` flag, since the compiler doesn't
+know about the MyProject/Foo subdirectory by default.  In fact, the
+user has to include another compiler flag for every dependency that
+does this.
 
 But you don't do that, because you're better than that.
 
 (Please note that my rant is somewhat spoiled by the fact that the
-included copy of TinyXML (by Lee Thomason) does not use this project's
-namespace (i.e. something like
-`OneTrueMakefile::TinyXML::TiXmlDocument`), because someone else wrote
-the (excellent) TinyXML library, and I just dropped it into this One
-True Makefile project.  I didn't change how namespaces work in TinyXML
-because I didn't want to muck around in the code too much, for fear of
-introducing a subtle bug somewhere.)
+included copy of TinyXML2 (by Lee Thomason) does not use this
+project's namespace (i.e. something like
+`OneTrueMakefile::TinyXML2::TiXmlDocument`), since I didn't write the
+(excellent) TinyXML2 library, and instead I just dropped it into this
+One True Makefile project.  I didn't change how namespaces work in
+TinyXML2 because I didn't want to muck around in the code too much,
+for fear of introducing a subtle bug somewhere.)
 
 Usage
 =====
@@ -187,7 +189,7 @@ do the following:
     to modify the build/install process.
 
 * Add in your own modules.  (You can replace the `foo` module and/or
-    the `tinyxml` module, and use them as templates.  It's unlikely
+    the `tinyxml2` module, and use them as templates.  It's unlikely
     the "Hello, world!"  functionality provided by the foo module will
     be super-useful for your project, anyway.)
 
@@ -198,11 +200,11 @@ do the following:
 
     - Change the `modules :=` area to reflect the names of your
         modules.  For example, if you killed the `foo` module, kept
-        the `tinyxml` module, and added two more modules called bar
+        the `tinyxml2` module, and added two more modules called bar
         and baz, you would change this section to:
 
         <pre><code>modules := \
-            tinyxml	bar	baz</code></pre>
+            tinyxml2	bar	baz</code></pre>
 
     - Change the `testmodules :=` area to reflect the names of your
         unit test modules.  For example, if you used the `testfoo`
@@ -257,19 +259,22 @@ do the following:
     installed should *not* be mentioned in the `module.mk` files.  The
     dependency autogeneration feature from gcc will deal with them,
     and since they aren't going to be installed, there's no reason to
-    list them manually anywhere.
+    list them manually anywhere.  (Also note that `.h` and `.hpp`
+    files that are not going to be installed should go in src/
+    directories, and not in include/ directories.)
 
-* If you're keeping tinyxml, and you've renamed your package from
-    something other than `one_true_makefile` (which is understandable),
-    then you'll need to edit the tops of the tinyxml headers and source
-    files to reflect that.  For example, if your new project is called
-    MyProject, you'll have to change lines that say
+* If you're keeping tinyxml2, and you've renamed your package from
+    something other than `one_true_makefile` (which is
+    understandable), then you'll need to edit the tops of the tinyxml2
+    source file to reflect that.  For example, if your new project is
+    called MyProject, then in tinyxml2.cpp and xmltest.cpp, you'll
+    have to change the lines that say
 
-    <pre><code>#include "one_true_makefile/tinyxml/tinyxml.h"</code></pre>
+    <pre><code>#include "one_true_makefile/tinyxml2/tinyxml2.h"</code></pre>
 
    to
 
-    <pre><code>#include "MyProject/tinyxml/tinyxml.h"</code></pre>
+    <pre><code>#include "MyProject/tinyxml2/tinyxml2.h"</code></pre>
 
 * Rename all the directories named `one_true_makefile` to your
     project's name.
@@ -315,10 +320,10 @@ do the following:
 Note that, while `make clean` works automagically, there is also a
 `make clobber` target.  This removes final build targets and
 dependency (`*.d`) files.  It also removes unit test build targets;
-however, that part isn't automatic, in the sense that the logic for
-removing unit test build targets has to be manually added to the
-bottom of the unit test modules' `module.mk` files.  (Check out the
-bottom of `test_foo/module.mk` to see what I mean.)
+however, that part isn't handled automatically for you, in the sense
+that the logic for removing unit test build targets has to be manually
+added to the bottom of the unit test modules' `module.mk` files.
+(Check out the bottom of `test_foo/module.mk` to see what I mean.)
 
 Troubleshooting
 ===============
@@ -330,26 +335,26 @@ silently dying by typing `make`; if it just returns, without saying
 dying.  Another obvious way is to see if there is a problem is to
 check the return code by running:
 
-    make || echo err
+    <pre><code>make || echo err</code></pre>
 
-If it says "err", something went wrong, even if you don't have an
-error message.
+If it says "err", the return code of `make` incicated that something
+went wrong, even if you don't have an error message.
 
-Trying `make -d`, `make --debug=a`, `make --debug=b`, `make
---debug=v`, `make --debug=i`, `make --debug=j` and/or `make --debug=m`
-may be helpful.
+Trying passing various debugging flags to `make`, such as `make -d`,
+`make --debug=a`, `make --debug=b`, `make --debug=v`, `make
+--debug=i`, `make --debug=j` and/or `make --debug=m` may be helpful.
 
 Sometimes renaming files can cause problems, in that this causes the
 dependency files (i.e. the `*.d` files) to be inaccurate.  A way to
 fix this is to delete all the dependency files so that they will be
 regenerated correctly.  One way to do this is to run:
 
-    find . -type f -name "*.d" -exec rm -vf {} \;
+    <pre><code>find . -type f -name "*.d" -exec rm -vf {} \;</code></pre>
 
 You may also want to start fresh by deleting all the output of the
 entire build process by running:
 
-    rm Linux-* -rf
+    <pre><code>rm Linux-* -rf</code></pre>
 
 (If you're not on Linux, it should be obvious how to change this
 line.)
@@ -370,7 +375,7 @@ directory (or whatever you've named it).  For example, if
 `foo/module.mk` contains the problem area, and `build/foo/foo.lo`
 exists, but `Linux-stage/bin` does not contain the `foo` executable,
 then Make apparently died before creating the `foo` executable but
-after successfully compiling `foo.lo`.  Maybe that might suggest
+after successfully compiling `foo.lo`.  Maybe that would suggest
 something to you.  (This isn't definitive-- maybe the `foo` executable
 also has other dependencies, and one of those is causing the problem.)
 

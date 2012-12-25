@@ -39,10 +39,10 @@ PKG_NAME := one_true_makefile
 # The $(modules) and $(testmodules) variables give all of the modules
 #   (i.e. separate source directories) that make up this project.
 modules := \
-	tinyxml	foo
+	tinyxml2	foo
 
 testmodules := \
-	test_tinyxml	test_foo 
+	test_tinyxml2	test_foo 
 
 # The module.mk files in each module directory will add to these
 #   variables.

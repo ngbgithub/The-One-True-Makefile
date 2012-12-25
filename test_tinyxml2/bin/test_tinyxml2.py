@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-import contextlib, os, subprocess, unittest
+import contextlib, os, shutil, subprocess, unittest
 
 
 class TestTinyXML2(unittest.TestCase):
@@ -13,22 +13,24 @@ class TestTinyXML2(unittest.TestCase):
         #   files are in $(test_dir)/share/$(PKG_NAME)/tinymxl, so we
         #   need to find that directory and temporarily switch into
         #   it.
-        path = _findShareSubdir()
-        with _change_dir_back_when_done(path):
 
-            cmd = ['../../../bin/xmltest']
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            try:
+        # Create our temp directory, and populate it.
+        with _tempDir() as tempDir:
+            targetDir = os.path.join(tempDir, 'resources')
+            os.mkdir(targetDir, 0o777)
+            resourcesParentDir = _findShareSubdir('..')
+            for b in ('dream.xml', 'utf8testverify.xml', 'utf8test.xml'):
+                f = os.path.join(resourcesParentDir, 'resources', b)
+                shutil.copy(f, targetDir)
+
+            # Change into our temp dir, and run our test.
+            cmd = [os.path.abspath('xmltest')]
+            with _change_dir_back_when_done(tempDir):
+                p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
                 o, e = p.communicate()
-                expected = o.split(b'\n')[-2]
+                summary = o.split(b'\n')[-2]
 
-            # Kill the output files xmltest generates.
-            finally:
-                for f in ['file.txt', 'textfile.txt']:
-                    if os.path.exists(f):
-                        os.remove(f)
-
-        self.assertEqual(expected, b'Pass 101, Fail 0',
+        self.assertEqual(summary, b'Pass 101, Fail 0',
                          b'Unexpected output: '+o)
 
 
@@ -42,16 +44,29 @@ def _change_dir_back_when_done(path):
         os.chdir(path)
         yield 1
     finally:
-        os.chdir(orig)
+          os.chdir(orig)
 
 
-def _findShareSubdir():
+@contextlib.contextmanager
+def _tempDir():
+    '''Create a temp directory, and delete it when we're done.
+    '''
+    import tempfile
+
+    try:
+        d = tempfile.mkdtemp()
+        yield d
+    finally:
+        shutil.rmtree(d)
+
+
+def _findShareSubdir(prefix):
     '''Find our test_tinyxml2 subdirectory of ../share.  (This is
     useful because I don't want to deal with hard coding a package
     name.)
     '''
     path = None
-    for d in os.walk('..'):
+    for d in os.walk(prefix):
         spl = d[0].split('/')
         if (len(spl) > 1) and (spl[1] == 'share') \
                 and (spl[-1] == 'test_tinyxml2'):

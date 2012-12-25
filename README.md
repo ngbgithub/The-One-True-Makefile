@@ -5,8 +5,7 @@ The purpose of this One True Makefile project is to provide a template
 for projects that use Autoconf, Libtool and Make, but not Automake.
 (I prefer not to use Automake, although obviously I like some of its
 brothers.)  It is placed in the public domain, since I don't see the
-point of making a copyleft build process template, since if you have
-the edited build scripts, you by definition have the source code.
+point of making a copyleft build process template.
 
 If you're going to use this template project, you will probably want
 to already have a working knowledge of how Autoconf, Libtool and Make
@@ -301,8 +300,8 @@ do the following:
 
     Our default version of `configure.ac` already has these changes
     made, but if and when you run `autoscan` and replace
-    `configure.ac`, you'll have to re-do them.  (Minimizing the amount
-    of stuff you have to re-do after running `autoscan` is the purpose
+    `configure.ac`, you'll have to redo them.  (Minimizing the amount
+    of stuff you have to redo after running `autoscan` is the purpose
     of the `project.m4` scheme.)
 
     If you don't like the `include/config.h` scheme, it's easy to
@@ -335,7 +334,7 @@ silently dying by typing `make`; if it just returns, without saying
 dying.  Another obvious way is to see if there is a problem is to
 check the return code by running:
 
-    <pre><code>make || echo err</code></pre>
+    make || echo err
 
 If it says "err", the return code of `make` incicated that something
 went wrong, even if you don't have an error message.
@@ -349,12 +348,12 @@ dependency files (i.e. the `*.d` files) to be inaccurate.  A way to
 fix this is to delete all the dependency files so that they will be
 regenerated correctly.  One way to do this is to run:
 
-    <pre><code>find . -type f -name "*.d" -exec rm -vf {} \;</code></pre>
+    find . -type f -name "*.d" -exec rm -vf {} \;
 
 You may also want to start fresh by deleting all the output of the
 entire build process by running:
 
-    <pre><code>rm Linux-* -rf</code></pre>
+    rm Linux-* -rf
 
 (If you're not on Linux, it should be obvious how to change this
 line.)

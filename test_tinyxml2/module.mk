@@ -15,9 +15,9 @@ test_tinyxml2_includes :=
 test_tinyxml2_libs :=
 
 test_tinyxml2_shares := \
-	$(test_dir)/share/$(PKG_NAME)/test_tinyxml2/dream.xml \
-	$(test_dir)/share/$(PKG_NAME)/test_tinyxml2/utf8testverify.xml \
-	$(test_dir)/share/$(PKG_NAME)/test_tinyxml2/utf8test.xml
+	$(test_dir)/share/$(PKG_NAME)/test_tinyxml2/resources/dream.xml \
+      $(test_dir)/share/$(PKG_NAME)/test_tinyxml2/resources/utf8testverify.xml \
+	$(test_dir)/share/$(PKG_NAME)/test_tinyxml2/resources/utf8test.xml
 
 test_tinyxml2_obj := \
 	$(addprefix $(build_dir)/test_tinyxml2/,\
@@ -40,7 +40,7 @@ test_tinyxml2_cppflags := -Itinyxml2/include
 # Add to our list of what the Makefile manages.
 ##########################################################
 
-# Binaries etc. don't get added to these lists, sine unit tests don't
+# Binaries etc. don't get added to these lists, since unit tests don't
 #   get installed.
 
 SRC += $(test_tinyxml2_src)
@@ -72,6 +72,11 @@ $(test_dir)/bin/xmltest: \
 	$(build_dir)/test_tinyxml2/xmltest.lo \
 	-ltinyxml2-otm \
 	| $(test_dir)/bin
+
+$(test_tinyxml2_shares): $(test_dir)/share/$(PKG_NAME)/test_tinyxml2/resources
+
+$(test_dir)/share/$(PKG_NAME)/test_tinyxml2/resources:
+	mkdir $@
 
 ##########################################################
 # Phony targets:

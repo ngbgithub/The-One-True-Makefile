@@ -11,7 +11,7 @@
 #define HAVE_MEMORY_H 1
 
 /* Define to 1 if /proc/self/exe exists. */
-#define HAVE_PROC_SELF_EXE 1
+/* #undef HAVE_PROC_SELF_EXE */
 
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #define HAVE_PTRDIFF_T 1

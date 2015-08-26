@@ -15,10 +15,11 @@ if test "${PYTHON}" = no ; then
    AC_MSG_WARN([Python >= 2.7 or >= 3.2 was not found.  (Python 3.1 or 3.0 will not work, since Python -B -m unittest was broken.)  Unit tests will not be available.])
 fi
 
-# Make sure we have GNU libtool.
-AC_PATH_PROGS([LIBTOOL], [glibtool libtool],
-              [AC_MSG_ERROR([libtool was not found.])])
-AC_SUBST(LIBTOOL, [[$LIBTOOL]])
+# If LIBTOOL is not already defined, then make sure we have GNU libtool.
+if test -z $LIBTOOL; then
+   AC_PATH_PROGS([LIBTOOL], [glibtool],
+                 [AC_MSG_ERROR([glibtool was not found.])])
+fi
 
 # See whether /proc/self/exe works.
 AC_CHECK_FILE([/proc/self/exe],

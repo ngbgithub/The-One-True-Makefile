@@ -2,7 +2,12 @@
 #include <errno.h>
 #include <unistd.h> // readlink()
 
+#ifdef HAVE__NSGETEXECUTABLEPATH
+#include <mach-o/dyld.h> // _NSGetExecutablePath()
+#endif
+
 #include <algorithm> // min()
+#include <cassert>
 #include <cstring> // strerror()
 #include <iostream>
 #include <sstream>
@@ -96,27 +101,47 @@ namespace {
   //   "usr/local".
   std::string binPrefix()
   {
-    const size_t BUFFSIZE = 200;
+    const size_t BUFFSIZE = 1000;
     char buff[BUFFSIZE];
+    size_t endIndex;
 
+#ifdef HAVE__NSGETEXECUTABLEPATH
+
+    // Use _NSGetExecutablePath() to find the location of the current running
+    //   executable.
+    
+    assert(BUFFSIZE <= numeric_limits<uint32_t>::max());
+    uint32_t len = BUFFSIZE;
+    if(_NSGetExecutablePath(buff, &len)) {
+      throw runtime_error("Buffer size too small for executable path name.");
+    }
+    assert(BUFFSIZE>0);
+    endIndex = std::min(static_cast<size_t>(len-1), BUFFSIZE-1);
+
+#elif defined(HAVE_PROC_SELF_EXE)
+    
     // Use /proc to find the location of the current running executable.
-
-#ifndef HAVE_PROC_SELF_EXE
-    throw runtime_error("On Linux, we can find config files using"
-			" /proc/self/exe, but apparently this isn't Linux."
-			"   (I wouldn't worry about it; this is just a 'hello,"
-			" world' program.)");
-#endif
 
     ssize_t len = readlink("/proc/self/exe", buff, BUFFSIZE);
     if(-1 == len) {
       ostringstream oss;
-      oss << "binPrefix(): Error calling readlink: " << strerror(errno);
+      oss << "binPrefix(): Error calling readlink(): " << strerror(errno);
       throw runtime_error(oss.str());
     }
+    assert(BUFFSIZE>0);
+    endIndex = std::min(static_cast<size_t>(len-1), BUFFSIZE-1);
+
+#else
+    throw runtime_error("On Linux, we can find config files using"
+			" /proc/self/exe, and on OS X we can use"
+			" _NSGetExecutablePath(), but neither of those seem to"
+			" apply here.  (I wouldn't worry about it; this is just"
+			" a 'hello, world' program.)");
+#endif
+
     // This shouldn't be necessary, but let's be paranoid.
-    len = std::min(static_cast<size_t>(len), BUFFSIZE-1);
-    buff[len] = '\0';
+    buff[endIndex] = '\0';
+
     const std::string exe(buff);
 
     // We assume the prefix is the level level below /bin/.

@@ -49,6 +49,9 @@
 /* Define to 1 if the system has the type `_Bool'. */
 #define HAVE__BOOL 1
 
+/* Define to 1 if you have the `_NSGetExecutablePath' function. */
+#define HAVE__NSGETEXECUTABLEPATH 1
+
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "BUG-REPORT-ADDRESS"
 

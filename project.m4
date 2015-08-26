@@ -16,12 +16,15 @@ if test "${PYTHON}" = no ; then
 fi
 
 # If LIBTOOL is not already defined, then make sure we have GNU libtool.
-if test -z $LIBTOOL; then
-   AC_PATH_PROGS([LIBTOOL], [glibtool],
+if test -z "${LIBTOOL}"; then
+   AC_PATH_PROGS([LIBTOOL], [glibtool libtool],
                  [AC_MSG_ERROR([glibtool was not found.])])
 fi
 
-# See whether /proc/self/exe works.
+# For OS X:
+AC_CHECK_FUNCS([_NSGetExecutablePath])
+
+# For Linux:
 AC_CHECK_FILE([/proc/self/exe],
 	      [AC_DEFINE([HAVE_PROC_SELF_EXE], 1,
 	                 [Define to 1 if /proc/self/exe exists.])])

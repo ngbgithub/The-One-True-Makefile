@@ -16,6 +16,7 @@ Makefile
 config.status
 autom4te.cache
 *.d
+include/config.h
 
 # "Junk"
 *.log
